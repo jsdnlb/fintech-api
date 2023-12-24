@@ -2,7 +2,8 @@ from typing import Union
 from datetime import datetime, timedelta
 from jose import jwt
 from core.config import ALGORITHM
-import os 
+import os
+
 
 def create_token(data: dict, time_expire: Union[datetime, None] = None):
     data_copy = data.copy()

@@ -4,10 +4,11 @@ from pydantic import BaseModel
 
 class User(BaseModel):
     username: str
+    age: int
     full_name: Union[str, None] = None
     email: Union[str, None] = None
+    hashed_password: str
     disabled: Union[bool, None] = None
 
-
-class UserInDB(User):
-    hashed_password: str
+    class Config:
+        __collection__ = "users"
