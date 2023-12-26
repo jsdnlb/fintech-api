@@ -29,7 +29,9 @@ def get_all_users(user: User = Depends(get_user_disabled_current)):
 
 
 @router.get("/users/{user_id}", response_model=User)
-def get_user_by_id(user_id: str):
+def get_user_by_id(
+    user_id: str, current_user: User = Depends(get_user_disabled_current)
+):
     user = users.find_one({"_id": ObjectId(user_id)})
 
     if user:
@@ -42,7 +44,7 @@ def get_user_by_id(user_id: str):
 @router.post("/users/")
 def create_user(user: User, current_user: User = Depends(get_user_disabled_current)):
     hash = pwd_context.hash(user.hashed_password)
-    user_data = user.dict()
+    user_data = user.__dict__
     user_data["hashed_password"] = hash
     result = users.insert_one(user_data)
     if result.inserted_id:
