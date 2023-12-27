@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import List
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from api.models.products import FinancialProduct
 from api.models.user import User
 from api.security.authentication import get_user_disabled_current
@@ -15,14 +16,15 @@ now = datetime.now()
 @router.get("/financial-products/")
 def get_all_products(user: User = Depends(get_user_disabled_current)):
     all_records = [x for x in products.find()]
+    product_ids = [str(product["_id"]) for product in all_records]
     cleaned_products = [
         {**product, "_id": str(product["_id"])} for product in all_records
     ]
 
     return {
         "message": "List of products",
+        "products_ids": product_ids,
         "result": cleaned_products,
-        "author": user,
     }
 
 
@@ -39,7 +41,7 @@ def get_user_by_id(
         raise HTTPException(status_code=404, detail="Financial product not found")
 
 
-@router.post("/financial-products/", response_model=FinancialProduct)
+@router.post("/financial-products/", response_model=dict)
 def create_financial_product(
     financial_product: FinancialProduct,
     current_user: User = Depends(get_user_disabled_current),
@@ -50,10 +52,11 @@ def create_financial_product(
 
     if current_user.role == "admin":
         result = products.insert_one(product_data)
+        product_data["_id"] = str(product_data["_id"])
         if result.inserted_id:
             return {
                 "message": "Financial product created successfully",
-                "product_id": str(result.inserted_id),
+                "financial_product": product_data,
             }
         else:
             raise HTTPException(
@@ -90,9 +93,12 @@ def update_financial_product(
     if result.modified_count == 1:
         return {
             "message": "Financial product updated successfully",
-            "product_id": product_id,
             "data": existing_product,
         }
+    elif result.modified_count == 0:
+        raise HTTPException(
+            status_code=500, detail="You are trying to update a value by the same value"
+        )
     else:
         raise HTTPException(status_code=500, detail="Error updating financial product")
 
@@ -109,3 +115,23 @@ def delete_product_by_id(
         raise HTTPException(
             status_code=404, detail=f"Product with ID {product_id} not found"
         )
+
+
+@router.delete("/financial-products/")
+def delete_products(
+    user: User = Depends(get_user_disabled_current),
+    ids: List[str] = Body(..., required=True),
+):
+    if not ids:
+        raise HTTPException(status_code=400, detail="No IDs provided")
+
+    object_ids = [ObjectId(id) for id in ids]
+    deleted_count = products.delete_many({"_id": {"$in": object_ids}})
+
+    if deleted_count.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="No records found")
+
+    return {
+        "message": "Products deleted",
+        "deleted_count": deleted_count.deleted_count,
+    }

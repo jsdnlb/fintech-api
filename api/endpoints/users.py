@@ -1,5 +1,6 @@
+from typing import List
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from passlib.context import CryptContext
 from api.models.user import User
 from api.security.authentication import get_user_disabled_current
@@ -18,13 +19,14 @@ def user(user: User = Depends(get_user_disabled_current)):
 
 @router.get("/users/")
 def get_all_users(user: User = Depends(get_user_disabled_current)):
-    res = [x for x in users.find()]
-    cleaned_users = [{**user, "_id": str(user["_id"])} for user in res]
+    all_records = [x for x in users.find()]
 
+    cleaned_users = [{**user, "_id": str(user["_id"])} for user in all_records]
+    user_ids = [str(user["_id"]) for user in all_records]
     return {
         "message": "List of users",
+        "users_ids": user_ids,
         "result": cleaned_users,
-        "author": user,
     }
 
 
@@ -56,29 +58,37 @@ def create_user(user: User, current_user: User = Depends(get_user_disabled_curre
         raise HTTPException(status_code=500, detail="Error creating user")
 
 
-@router.put("/users/{user_id}", response_model=User)
-def update_user_by_id(
+@router.put("/users/{user_id}", response_model=dict)
+def update_user(
     user_id: str,
-    user_update: User,
+    user_data: User,
     current_user: User = Depends(get_user_disabled_current),
 ):
-    object_id = ObjectId(user_id)
-    hash = pwd_context.hash(user_update.hashed_password)
-    user_data = user_update.dict(exclude_unset=True)
-    user_data["hashed_password"] = hash
+    obj_id = ObjectId(user_id)
+    existing_user = users.find_one({"_id": obj_id})
 
-    result = users.update_one({"_id": object_id}, {"$set": user_data})
+    if existing_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    for field, value in user_data.dict(exclude_unset=True).items():
+        if field == "hashed_password":
+            if value:
+                value = pwd_context.hash(value)
+            else:
+                value = existing_user.get("hashed_password", None)
+
+        existing_user[field] = value
+
+    result = users.update_one({"_id": obj_id}, {"$set": existing_user})
+    existing_user["_id"] = str(existing_user["_id"])
 
     if result.modified_count == 1:
-        updated_user = users.find_one({"_id": object_id})
-        updated_user["_id"] = str(updated_user["_id"])
-        return updated_user
-    elif result.matched_count == 0:
-        raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
+        return {
+            "message": "User updated successfully",
+            "data": existing_user,
+        }
     else:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to update user with ID {user_id}"
-        )
+        raise HTTPException(status_code=500, detail="Error updating user")
 
 
 @router.delete("/users/{user_id}")
@@ -91,3 +101,23 @@ def delete_user_by_id(
         return {"message": f"User with ID {user_id} deleted successfully"}
     else:
         raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
+
+
+@router.delete("/users/")
+def delete_users(
+    user: User = Depends(get_user_disabled_current),
+    ids: List[str] = Body(..., required=True),
+):
+    if not ids:
+        raise HTTPException(status_code=400, detail="No IDs provided")
+
+    object_ids = [ObjectId(id) for id in ids]
+    deleted_count = users.delete_many({"_id": {"$in": object_ids}})
+
+    if deleted_count.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="No records found")
+
+    return {
+        "message": "Users deleted",
+        "deleted_count": deleted_count.deleted_count,
+    }

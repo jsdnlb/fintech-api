@@ -14,4 +14,4 @@ class FinancialProduct(BaseModel):
     created_at: datetime = None
     updated_by: Optional[str] = None
     updated_at: Optional[datetime] = None
-    active: bool
+    active: Optional[bool] = None
