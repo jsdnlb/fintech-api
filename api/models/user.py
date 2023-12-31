@@ -1,9 +1,5 @@
 from typing import Optional, Union
-from pydantic import BaseModel, validator
-from passlib.context import CryptContext
-
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+from pydantic import BaseModel
 
 
 class User(BaseModel):

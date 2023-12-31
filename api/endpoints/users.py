@@ -1,7 +1,8 @@
 from typing import List
 from bson import ObjectId
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends
 from passlib.context import CryptContext
+from api.endpoints.exception_handler import exception_handler
 from api.models.user import User
 from api.security.authentication import get_user_disabled_current
 from api.db.database import database as db
@@ -40,7 +41,7 @@ def get_user_by_id(
         user["_id"] = str(user["_id"])
         return user
     else:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise exception_handler("404_NOT_FOUND")
 
 
 @router.post("/users/")
@@ -55,7 +56,7 @@ def create_user(user: User, current_user: User = Depends(get_user_disabled_curre
             "user_id": str(result.inserted_id),
         }
     else:
-        raise HTTPException(status_code=500, detail="Error creating user")
+        raise exception_handler("500_CREATE")
 
 
 @router.put("/users/{user_id}", response_model=dict)
@@ -68,7 +69,7 @@ def update_user(
     existing_user = users.find_one({"_id": obj_id})
 
     if existing_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise exception_handler("404_NOT_FOUND")
 
     for field, value in user_data.dict(exclude_unset=True).items():
         if field == "hashed_password":
@@ -87,8 +88,10 @@ def update_user(
             "message": "User updated successfully",
             "data": existing_user,
         }
+    elif result.modified_count == 0:
+        raise exception_handler("422_UNPROCESSABLE_ENTITY")
     else:
-        raise HTTPException(status_code=500, detail="Error updating user")
+        raise exception_handler("500_UPDATE")
 
 
 @router.delete("/users/{user_id}")
@@ -100,7 +103,7 @@ def delete_user_by_id(
     if result.deleted_count == 1:
         return {"message": f"User with ID {user_id} deleted successfully"}
     else:
-        raise HTTPException(status_code=404, detail=f"User with ID {user_id} not found")
+        raise exception_handler("404_NOT_FOUND")
 
 
 @router.delete("/users/")
@@ -109,13 +112,13 @@ def delete_users(
     ids: List[str] = Body(..., required=True),
 ):
     if not ids:
-        raise HTTPException(status_code=400, detail="No IDs provided")
+        raise exception_handler("422_NO_ID")
 
     object_ids = [ObjectId(id) for id in ids]
     deleted_count = users.delete_many({"_id": {"$in": object_ids}})
 
     if deleted_count.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="No records found")
+        raise exception_handler("404_NOT_FOUND")
 
     return {
         "message": "Users deleted",
