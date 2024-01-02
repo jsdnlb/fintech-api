@@ -49,3 +49,10 @@ def get_user_disabled_current(user: User = Depends(get_user_current)):
     if user.disabled:
         raise exception_handler("400_INACTIVE_USER")
     return user
+
+
+def get_user_admin_current(user: User = Depends(get_user_current)):
+    if user.role == "admin":
+        return user
+    else:
+        raise exception_handler("403_NOT_ALLOWED")
