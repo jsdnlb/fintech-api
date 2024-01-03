@@ -54,5 +54,3 @@ def create_loan(loan_data: Loan, current_user: User = Depends(get_user_admin_cur
         return loan
     else:
         raise exception_handler("404_NOT_FOUND")
-
-
