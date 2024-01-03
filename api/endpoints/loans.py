@@ -4,6 +4,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 from passlib.context import CryptContext
 from datetime import datetime
 from api.endpoints.exception_handler import exception_handler
+from api.endpoints.utils.helpers import calculate_loan_installments
 from api.models.loans import Loan
 from api.models.user import User
 from api.security.authentication import (
@@ -91,17 +92,6 @@ def create_loan(loan: Loan, current_user: User = Depends(get_user_admin_current)
             raise exception_handler("500_CREATE")
     else:
         raise exception_handler("404_NOT_FOUND")
-
-
-def calculate_loan_installments(total_amount, term_months):
-    amount_quota = total_amount / term_months
-    amount = 0
-    installments = {}
-
-    for month in range(1, term_months + 1):
-        amount = amount + amount_quota
-        installments[str(month)] = round(amount, 2)
-    return installments
 
 
 @router.delete("/loans/")
