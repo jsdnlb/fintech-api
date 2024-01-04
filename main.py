@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from api.endpoints import loan, payment, product, root, user, auth, simulate_loan
+from api.routers import loan, payment, product, root, user, auth, simulate_loan
 
 
 app = FastAPI()

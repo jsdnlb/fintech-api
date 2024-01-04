@@ -3,8 +3,8 @@ from bson import ObjectId
 from fastapi import APIRouter, Body, Depends, HTTPException
 from passlib.context import CryptContext
 from datetime import datetime
-from api.endpoints.exception_handler import exception_handler
-from api.endpoints.utils.helpers import calculate_loan_installments
+from routers.exception_handler import exception_handler
+from routers.utils.helpers import calculate_loan_installments
 from api.models.loan import Loan
 from api.models.user import User
 from api.security.authentication import (
