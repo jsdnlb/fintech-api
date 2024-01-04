@@ -3,7 +3,7 @@ from typing import List
 from bson import ObjectId
 from fastapi import APIRouter, Body, Depends
 from api.endpoints.exception_handler import exception_handler
-from api.models.products import FinancialProduct
+from api.models.financial_product import FinancialProduct
 from api.models.user import User
 from api.security.authentication import get_user_disabled_current
 from api.db.database import database as db

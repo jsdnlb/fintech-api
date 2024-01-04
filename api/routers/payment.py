@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from typing import List
 from datetime import datetime
 from api.dependencies import get_loan, get_user
-from api.models.payments import Payment
+from api.models.payment import Payment
 from api.models.user import User
 from api.security.authentication import get_user_disabled_current
 from api.db.database import database as db
