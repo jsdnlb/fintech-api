@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import List
 from bson import ObjectId
 from fastapi import APIRouter, Body, Depends
-from api.routers.exception_handler import exception_handler
+from api.routers.utils.exception_handler import exception_handler
 from api.models.financial_product import FinancialProduct
 from api.models.user import User
 from api.security.authentication import get_user_disabled_current

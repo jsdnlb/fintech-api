@@ -2,7 +2,7 @@ import logging
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from api.endpoints.exception_handler import exception_handler
+from api.routers.utils.exception_handler import exception_handler
 from api.models.token import create_token
 from api.models.user import User
 from core.config import SECRET, ALGORITHM

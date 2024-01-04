@@ -2,17 +2,17 @@ from typing import Dict
 
 from bson import ObjectId
 from api.db.database import database as db
-from api.endpoints.exception_handler import exception_handler
+from api.routers.utils.exception_handler import exception_handler
 
 
-loans = db.loans
+credit_line_db = db.credit_line
 users = db.users
 
 
-def get_loan(loan_id: str) -> Dict:
-    loan = loans.find_one({"_id": ObjectId(loan_id)})
-    if loan:
-        return loan
+def get_credit_line(credit_line_id: str) -> Dict:
+    credit_line = credit_line_db.find_one({"_id": ObjectId(credit_line_id)})
+    if credit_line:
+        return credit_line
     else:
         raise exception_handler("404_NOT_FOUND")
 

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from typing import List
 from datetime import datetime
-from api.dependencies import get_loan, get_user
+from api.dependencies import get_credit_line, get_user
 from api.models.payment import Payment
 from api.models.user import User
 from api.security.authentication import get_user_disabled_current
@@ -17,11 +17,11 @@ payments = db.payments
 def create_payment(
     payment_data: Payment,
     current_user: User = Depends(get_user_disabled_current),
-    loan: dict = Depends(get_loan),
+    credit_line: dict = Depends(get_credit_line),
     user: dict = Depends(get_user),
 ):
     payment = payment_data.__dict__
-    payment["loan_id"] = str(loan["_id"])
+    payment["credit_line_id"] = str(credit_line["_id"])
     payment["user_id"] = str(user["_id"])
     payment["created_by"] = current_user.username
     payment["created_at"] = datetime.timestamp(now)
@@ -29,10 +29,10 @@ def create_payment(
     result = payments.insert_one(payment)
     payment["_id"] = str(payment["_id"])
     if result.inserted_id:
-        # TODO Update amount loan
+        # TODO Update amount credit line
         return {
             "message": "Payment created successfully",
-            "loan_id": str(result.inserted_id),
+            "credit_line_id": str(result.inserted_id),
             "payment": payment,
         }
 

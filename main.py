@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from api.routers import loan, payment, product, root, user, auth, simulate_loan
+from api.routers import credit_line, payment, product, root, simulate_credit_line, user, auth
 
 
 app = FastAPI()
@@ -10,6 +10,6 @@ app.include_router(root.router)
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(product.router)
-app.include_router(loan.router)
-app.include_router(simulate_loan.router)
+app.include_router(credit_line.router)
+app.include_router(simulate_credit_line.router)
 app.include_router(payment.router)
