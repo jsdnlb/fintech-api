@@ -28,7 +28,7 @@ def get_all_balance(user: User = Depends(get_user_disabled_current)):
         item["_id"] = str(item["_id"])
 
     return {
-        "message": "List of credit line",
+        "message": "List of balances",
         "balance_ids": balance_ids,
         "result": all_records,
     }
