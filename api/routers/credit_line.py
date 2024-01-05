@@ -3,6 +3,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Body, Depends, HTTPException
 from passlib.context import CryptContext
 from datetime import datetime
+from api.models.balance import Balance
 from api.routers.utils.helpers import calculate_loan_installments
 from api.routers.utils.exception_handler import exception_handler
 from api.models.credit_line import CreditLine
@@ -17,6 +18,7 @@ from api.db.database import database as db
 router = APIRouter()
 users = db.users
 products = db.products
+balances = db.balances
 credit_line_db = db.credit_line
 now = datetime.now()
 
@@ -47,7 +49,9 @@ def get_credit_line_by_id(
 
     if credit_line:
         if "financial_product" in credit_line:
-            credit_line["financial_product"]["_id"] = str(credit_line["financial_product"]["_id"])
+            credit_line["financial_product"]["_id"] = str(
+                credit_line["financial_product"]["_id"]
+            )
         credit_line["_id"] = str(credit_line["_id"])
         return credit_line
     else:
@@ -55,7 +59,10 @@ def get_credit_line_by_id(
 
 
 @router.post("/credit_line/")
-def create_credit_line(credit_line_data: CreditLine, current_user: User = Depends(get_user_admin_current)):
+def create_credit_line(
+    credit_line_data: CreditLine, current_user: User = Depends(get_user_admin_current)
+):
+    balance = {}
     credit_line = credit_line_data.__dict__
     user = users.find_one({"_id": ObjectId(credit_line["user_id"])})
     financial_product = products.find_one({"_id": ObjectId(credit_line["product_id"])})
@@ -70,7 +77,9 @@ def create_credit_line(credit_line_data: CreditLine, current_user: User = Depend
                     detail="Amount is higher or lower than expected",
                 ),
             )
-        amount_interes = financial_product["interest_rate"] / 360 * credit_line["amount"]
+        amount_interes = (
+            financial_product["interest_rate"] / 360 * credit_line["amount"]
+        )
         total_payable = credit_line["amount"] + amount_interes
         quota = calculate_loan_installments(
             float(total_payable),
@@ -82,11 +91,18 @@ def create_credit_line(credit_line_data: CreditLine, current_user: User = Depend
         credit_line["amount_interes"] = amount_interes
         credit_line["total_payable"] = total_payable
         credit_line["quota"] = quota
-        result = credit_line_db.insert_one(credit_line)
-        if result.inserted_id:
+        res_credit_line = credit_line_db.insert_one(credit_line)
+
+        balance["balance"] = -total_payable
+        balance["credit_line_id"] = str(res_credit_line.inserted_id)
+        balance["created_by"] = current_user.username
+        balance["created_at"] = datetime.timestamp(now)
+        res_balance = balances.insert_one(balance)
+        if res_credit_line.inserted_id and res_balance:
             return {
                 "message": "Credit line created successfully",
-                "credit_line_id": str(result.inserted_id),
+                "credit_line_id": str(res_credit_line.inserted_id),
+                "balance_id": str(res_balance.inserted_id),
             }
         else:
             raise exception_handler("500_CREATE")

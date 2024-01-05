@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 class Balance(BaseModel):
     payment_id: Optional[str] = None
-    amount: float = Field(..., ge=0.0)
+    amount: Optional[float] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     created_by: Optional[str] = None
