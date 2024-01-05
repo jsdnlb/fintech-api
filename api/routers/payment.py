@@ -40,7 +40,7 @@ def create_payment(
     payment = payment_data.__dict__
     payment["credit_line_id"] = str(credit_line["_id"])
     payment["user_id"] = str(user["_id"])
-    payment["created_by"] = current_user.username
+    payment["created_by"] = current_user.id
     payment["created_at"] = datetime.timestamp(now)
 
     result = payments.insert_one(payment)

@@ -48,7 +48,7 @@ def simulate_credit_line(
         credit_line["financial_product"]["_id"] = str(
             credit_line["financial_product"]["_id"]
         )
-        credit_line["created_by"] = current_user.username
+        credit_line["created_by"] = current_user.id
         credit_line["created_at"] = datetime.timestamp(now)
         credit_line["amount_interes"] = amount_interes
         credit_line["total_payable"] = total_payable

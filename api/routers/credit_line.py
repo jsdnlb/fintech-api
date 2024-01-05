@@ -86,7 +86,7 @@ def create_credit_line(
             int(credit_line["term_months"]),
         )
         credit_line["financial_product"] = financial_product
-        credit_line["created_by"] = current_user.username
+        credit_line["created_by"] = current_user.id
         credit_line["created_at"] = datetime.timestamp(now)
         credit_line["amount_interes"] = amount_interes
         credit_line["total_payable"] = total_payable
@@ -95,7 +95,7 @@ def create_credit_line(
 
         balance["balance"] = -total_payable
         balance["credit_line_id"] = str(res_credit_line.inserted_id)
-        balance["created_by"] = current_user.username
+        balance["created_by"] = current_user.id
         balance["created_at"] = datetime.timestamp(now)
         res_balance = balances.insert_one(balance)
         if res_credit_line.inserted_id and res_balance:

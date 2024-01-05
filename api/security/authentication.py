@@ -40,6 +40,7 @@ def get_user_current(token: str = Depends(oauth2_scheme)):
         raise exception_handler("401_INVALID_CREDENTIALS")
 
     user = database.users.find_one({"username": username})
+    user["id"] = str(user["_id"])
     if not user:
         raise exception_handler("401_INVALID_CREDENTIALS")
     return User(**user)

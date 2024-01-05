@@ -48,7 +48,7 @@ def create_financial_product(
     current_user: User = Depends(get_user_disabled_current),
 ):
     product_data = financial_product.__dict__
-    product_data["created_by"] = current_user.username
+    product_data["created_by"] = current_user.id
     product_data["created_at"] = datetime.timestamp(now)
 
     if current_user.role == "admin":
