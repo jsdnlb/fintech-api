@@ -38,7 +38,7 @@ def get_user_by_id(
     user = users.find_one({"_id": ObjectId(user_id)})
 
     if user:
-        user["_id"] = str(user["_id"])
+        user["id"] = str(user["_id"])
         return user
     else:
         raise exception_handler("404_NOT_FOUND")
