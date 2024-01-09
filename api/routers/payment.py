@@ -13,6 +13,8 @@ from api.db.database import database as db
 router = APIRouter()
 now = datetime.now()
 payments = db.payments
+balances = db.balances
+credit_line_db = db.credit_line
 
 
 @router.get("/payments/")
@@ -46,12 +48,23 @@ def create_payment(
     result = payments.insert_one(payment)
     payment["_id"] = str(payment["_id"])
     if result.inserted_id:
-        # TODO Update amount credit line
-        return {
-            "message": "Payment created successfully",
-            "credit_line_id": str(result.inserted_id),
-            "payment": payment,
-        }
+        existing_balance = balances.find_one(
+            {"credit_line_id": str(credit_line["_id"])}
+        )
+        new_balance = existing_balance["balance"] + payment["amount"]
+        update_balance = balances.update_one(
+            {"credit_line_id": str(credit_line["_id"])},
+            {"$set": {"balance": new_balance}},
+        )
+        existing_balance["_id"] = str(existing_balance["_id"])
+
+        if update_balance.modified_count == 1:
+            return {
+                "message": "Payment created successfully",
+                "credit_line_id": str(result.inserted_id),
+                "payment": payment,
+                "new_balance": existing_balance,
+            }
 
     return payment
 
