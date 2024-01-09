@@ -50,7 +50,6 @@ def test_get_user_by_id():
 
     assert response.status_code == 200
     user = response.json()
-    print(user)
     assert "username" in user
     assert "age" in user
     assert isinstance(user["id"], str)
